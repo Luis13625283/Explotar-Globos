@@ -1,161 +1,74 @@
-var bow , arrow,  background, redB, pinkB, greenB ,blueB ,arrowGroup;
-var bowImage, arrowImage, green_balloonImage, red_balloonImage, pink_balloonImage ,blue_balloonImage, backgroundImage;
+var balloon,balloonImage1,balloonImage2;
+var database;
+var height;
 
-var score =0;
 function preload(){
-  
-  backgroundImage = loadImage("background0.png");
-  
-  arrowImage = loadImage("arrow0.png");
-  bowImage = loadImage("bow0.png");
-  red_balloonImage = loadImage("red_balloon0.png");
-  green_balloonImage = loadImage("green_balloon0.png");
-  pink_balloonImage = loadImage("pink_balloon0.png");
-  blue_balloonImage = loadImage("blue_balloon0.png");
-  
-}
+   bg =loadImage("cityImage.png");
+   balloonImage1=loadAnimation("hotairballoon1.png");
+   balloonImage2=loadAnimation("hotairballoon1.png","hotairballoon1.png",
+   "hotairballoon1.png","hotairballoon2.png","hotairballoon2.png",
+   "hotairballoon2.png","hotairballoon3.png","hotairballoon3.png","hotairballoon3.png");
+  }
 
-
-
+//Función para configurar el entorno inicial
 function setup() {
-  createCanvas(400, 400);
-  
-  //crea el fondo
-  scene = createSprite(0,0,400,400);
-  scene.addImage(backgroundImage);
-  scene.scale = 2.5
-  
-  //crea el arco para disparar las flechas
-  bow = createSprite(380,220,20,50);
-  bow.addImage(bowImage); 
-  bow.scale = 1;
-  
-   score = 0  
-  redB= new Group();
-  greenB= new Group();
-  blueB= new Group();
-  pinkB= new Group();
-  arrowGroup= new Group();
- 
-  
+  database=firebase.database();
+  createCanvas(1500,700);
+
+  balloon=createSprite(250,650,150,150);
+  balloon.addAnimation("hotairballoon",balloonImage1);
+  balloon.scale=0.5;
+
+  var balloonHeight=database.ref('balloon/height');
+  balloonHeight.on("value",readHeight, showError);
+  textSize(20); 
 }
 
+// función para mostrar la Interfaz del Usuario (UI por sus siglas en inglés)
 function draw() {
- background(0);
-  //fondo en movimiento
-    scene.velocityX = -3 
+  background(bg);
 
-    if (scene.x < 0){
-      scene.x = scene.width/2;
-    }
-  
-  //arco en movimiento
-  bow.y = World.mouseY
-  
-   //suelta la flecha cuando se presione la tecla de barra espaciadora
-  if (keyDown("space")) {
-    createArrow();
-    
+  if(keyDown(LEFT_ARROW)){
+    updateHeight(-10,0);
+    balloon.addAnimation("hotairballoon",balloonImage2);
   }
-  
-  //crea enemigos de forma continua
-  var select_balloon = Math.round(random(1,4));
-  
-  if (World.frameCount % 100 == 0) {
-    if (select_balloon == 1) {
-      redBalloon();
-    } else if (select_balloon == 2) {
-      greenBalloon();
-    } else if (select_balloon == 3) {
-      blueBalloon();
-    } else {
-      pinkBalloon();
-    }
+  else if(keyDown(RIGHT_ARROW)){
+    updateHeight(10,0);
+    balloon.addAnimation("hotairballoon",balloonImage2);
   }
-  
-  if (arrowGroup.isTouching(redB)) {
-  redB.destroyEach();
-  arrowGroup.destroyEach();
-    score=score+1;
-}
+  else if(keyDown(UP_ARROW)){
+    updateHeight(0,-10);
+    balloon.addAnimation("hotairballoon",balloonImage2);
+    balloon.scale=balloon.scale -0.005;
+  }
+  else if(keyDown(DOWN_ARROW)){
+    updateHeight(0,+10);
+    balloon.addAnimation("hotairballoon",balloonImage2);
+    balloon.scale=balloon.scale+0.005;
+  }
 
-
-
-
- if (arrowGroup.isTouching(greenB)) {
-  greenB.destroyEach();
-  arrowGroup.destroyEach();
-  score=score+3;
-}
-
-
-
- if (arrowGroup.isTouching(blueB)) {
-  blueB.destroyEach();
-  arrowGroup.destroyEach();
-  score=score+2;
-}
-
-
-
-if (arrowGroup.isTouching(pinkB)) {
-  pinkB.destroyEach();
-  arrowGroup.destroyEach();
-  score=score+1;
-}
-
-  
   drawSprites();
-  text("Puntuación: "+ score, 300,50);
+  fill(0);
+  stroke("white");
+  textSize(25);
+  text("**¡Utiliza las teclas de flecha para mover el globo aerostático!",40,40);
 }
 
 
-function redBalloon() {
-  var red = createSprite(0,Math.round(random(20, 370)), 10, 10);
-  red.addImage(red_balloonImage);
-  red.velocityX = 3;
-  red.lifetime = 150;
-  red.scale = 0.1;
-  redB.add(red);
+function updateHeight(x,y){
+  database.ref('balloon/height').set({
+    'x': height.x + x ,
+    'y': height.y + y
+  })
 }
 
-function blueBalloon() {
-  var blue = createSprite(0,Math.round(random(20, 370)), 10, 10);
-  blue.addImage(blue_balloonImage);
-  blue.velocityX = 3;
-  blue.lifetime = 150;
-  blue.scale = 0.1;
-  blueB.add(blue);
+function readHeight(data){
+  height = data.val();
+  console.log(height.x);
+  balloon.x = height.x;
+  balloon.y = height.y;
 }
 
-function greenBalloon() {
-  var green = createSprite(0,Math.round(random(20, 370)), 10, 10);
-  green.addImage(green_balloonImage);
-  green.velocityX = 3;
-  green.lifetime = 150;
-  green.scale = 0.1;
-  greenB.add(green);
-}
-
-function pinkBalloon() {
-  var pink = createSprite(0,Math.round(random(20, 370)), 10, 10);
-  pink.addImage(pink_balloonImage);
-  pink.velocityX = 3;
-  pink.lifetime = 150;
-  pink.scale = 1
-  pinkB.add(pink);
-}
-
-
-//crea las flechas para el arco
- function createArrow() {
-  var arrow= createSprite(100, 100, 60, 10);
-  arrow.addImage(arrowImage);
-  arrow.x = 360;
-  arrow.y=bow.y;
-  arrow.velocityX = -4;
-  arrow.lifetime = 100;
-  arrow.scale = 0.3;
-  arrowGroup.add(arrow);
-   
+function showError(){
+  console.log("Error in writing to the database");
 }
